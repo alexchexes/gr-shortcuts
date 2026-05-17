@@ -4,14 +4,14 @@
 #UseHook
 
 A_IconTip := "Guitar Rig Shortcuts"
+ValidateConfigOnly := HasCliArg("--validate-config")
 
 ScriptDir := A_ScriptDir
 RootDir := RegExReplace(ScriptDir, "\\src$")
 ConfigPath := RootDir "\config\gr-shortcuts.ini"
 
 if !FileExist(ConfigPath) {
-    MsgBox("Missing config file:`n" ConfigPath, "Guitar Rig Shortcuts", "Iconx")
-    ExitApp
+    Abort("Missing config file:`n" ConfigPath)
 }
 
 GuitarRigExe := ResolveConfiguredPath(ReadSetting("App", "GuitarRigExe", ""))
@@ -22,6 +22,11 @@ LoopMidiExe := ResolveConfiguredPath(ReadSetting("App", "LoopMidiExe", ""))
 ReuseRunningGuitarRig := ReadBoolSetting("App", "ReuseRunningGuitarRig", true)
 ActivateGuitarRigOnStart := ReadBoolSetting("App", "ActivateGuitarRigOnStart", true)
 CloseMapperWithGuitarRig := ReadBoolSetting("App", "CloseMapperWithGuitarRig", true)
+CloseLoopMidiWithMapper := ReadBoolSetting("App", "CloseLoopMidiWithMapper", true)
+
+LoopMidiStartedByMapper := false
+LoopMidiPid := 0
+OnExit(CleanupBeforeExit)
 
 MidiPort := ReadSetting("MIDI", "Port", "GR7 Control")
 SendMidiPath := ResolveConfiguredPath(ReadSetting("MIDI", "SendMidiPath", "tools\sendmidi\sendmidi.exe"))
@@ -29,12 +34,22 @@ MidiChannel := ReadNumberSetting("MIDI", "Channel", 1)
 PulseMs := ReadNumberSetting("MIDI", "PulseMs", 40)
 
 if !FileExist(SendMidiPath) {
-    MsgBox("Missing SendMIDI executable:`n" SendMidiPath "`n`nRun setup.ps1 first.", "Guitar Rig Shortcuts", "Iconx")
+    if !ValidateConfigOnly {
+        Abort("Missing SendMIDI executable:`n" SendMidiPath "`n`nRun setup.ps1 first.")
+    }
+}
+
+if !ValidateConfigOnly {
+    StartLoopMidiIfPossible()
+    CheckMidiPortVisible()
+}
+
+RegisterMappings()
+
+if ValidateConfigOnly {
     ExitApp
 }
 
-StartLoopMidiIfPossible()
-RegisterMappings()
 guitarRigPid := StartOrReuseGuitarRig()
 
 if CloseMapperWithGuitarRig && guitarRigPid {
@@ -42,6 +57,30 @@ if CloseMapperWithGuitarRig && guitarRigPid {
 }
 
 TrayTip("Guitar Rig Shortcuts", "Mapper is running for " GuitarRigWindow, 3)
+
+HasCliArg(expected) {
+    expected := StrLower(expected)
+    for arg in A_Args {
+        if StrLower(arg) = expected {
+            return true
+        }
+    }
+
+    return false
+}
+
+Abort(message) {
+    global ValidateConfigOnly
+
+    if ValidateConfigOnly {
+        FileAppend(message "`n", "**")
+    }
+    else {
+        MsgBox(message, "Guitar Rig Shortcuts", "Iconx")
+    }
+
+    ExitApp(1)
+}
 
 ReadSetting(section, key, defaultValue := "") {
     global ConfigPath
@@ -89,25 +128,55 @@ ExpandEnvironmentStrings(value) {
 }
 
 StartLoopMidiIfPossible() {
-    global LoopMidiExe
+    global LoopMidiExe, LoopMidiStartedByMapper, LoopMidiPid
 
     if ProcessExist("loopMIDI.exe") {
         return
     }
 
     if LoopMidiExe != "" && FileExist(LoopMidiExe) {
-        Run('"' LoopMidiExe '"', , "Hide")
+        Run('"' LoopMidiExe '"', , "Hide", &pid)
+        LoopMidiStartedByMapper := pid != 0
+        LoopMidiPid := pid
         Sleep 600
         return
     }
 
     for candidate in LoopMidiCandidates() {
         if FileExist(candidate) {
-            Run('"' candidate '"', , "Hide")
+            Run('"' candidate '"', , "Hide", &pid)
+            LoopMidiStartedByMapper := pid != 0
+            LoopMidiPid := pid
             Sleep 600
             return
         }
     }
+}
+
+CleanupBeforeExit(exitReason, exitCode) {
+    global CloseLoopMidiWithMapper, LoopMidiStartedByMapper, LoopMidiPid
+
+    if !CloseLoopMidiWithMapper || !LoopMidiStartedByMapper || !LoopMidiPid {
+        return 0
+    }
+
+    if !ProcessExist(LoopMidiPid) {
+        return 0
+    }
+
+    try {
+        DetectHiddenWindows(true)
+        if WinExist("ahk_pid " LoopMidiPid) {
+            WinClose("ahk_pid " LoopMidiPid)
+            WinWaitClose("ahk_pid " LoopMidiPid, , 2)
+        }
+
+        if ProcessExist(LoopMidiPid) {
+            ProcessClose(LoopMidiPid)
+        }
+    }
+
+    return 0
 }
 
 LoopMidiCandidates() {
@@ -125,13 +194,50 @@ LoopMidiCandidates() {
     return candidates
 }
 
+CheckMidiPortVisible() {
+    global MidiPort
+
+    if !MidiPortIsListed() {
+        Abort(
+            "MIDI port was not found: " MidiPort "`n`n"
+            "Open loopMIDI and make sure the port exists, then restart Windows or restart the Windows MIDI Service.`n`n"
+            "You can verify the port with:`n"
+            "tools\sendmidi\sendmidi.exe list"
+        )
+    }
+}
+
+MidiPortIsListed() {
+    global SendMidiPath, MidiPort
+
+    outputPath := A_Temp "\gr-shortcuts-sendmidi-list-" A_TickCount ".txt"
+    cmd := Format('"{1}" /C ""{2}" list > "{3}" 2>&1"', A_ComSpec, SendMidiPath, outputPath)
+
+    try {
+        RunWait(cmd, , "Hide")
+        output := FileExist(outputPath) ? FileRead(outputPath) : ""
+    }
+    finally {
+        if FileExist(outputPath) {
+            FileDelete(outputPath)
+        }
+    }
+
+    Loop Parse output, "`n", "`r" {
+        if Trim(A_LoopField) = MidiPort {
+            return true
+        }
+    }
+
+    return false
+}
+
 RegisterMappings() {
     global GuitarRigWindow
 
     mappingSection := ReadSection("Mappings")
     if Trim(mappingSection) = "" {
-        MsgBox("No mappings were found in [Mappings].", "Guitar Rig Shortcuts", "Iconx")
-        ExitApp
+        Abort("No mappings were found in [Mappings].")
     }
 
     registeredCount := 0
@@ -157,32 +263,46 @@ RegisterMappings() {
 
         parsed := ParseMappingAction(action)
         if !parsed {
-            MsgBox("Invalid mapping action:`n" keyName "=" action, "Guitar Rig Shortcuts", "Iconx")
-            ExitApp
+            Abort("Invalid mapping action:`n" keyName "=" action)
         }
 
         try {
-            Hotkey(keyName, HandleMappedKey.Bind(keyName, parsed.kind, parsed.number), "On")
+            Hotkey(keyName, HandleMappedKey.Bind(keyName, parsed), "On")
             registeredCount += 1
         }
         catch as error {
-            MsgBox("Could not register hotkey '" keyName "':`n" error.Message, "Guitar Rig Shortcuts", "Iconx")
-            ExitApp
+            Abort("Could not register hotkey '" keyName "':`n" error.Message)
         }
     }
 
     HotIfWinActive()
 
     if registeredCount = 0 {
-        MsgBox("No usable mappings were found in [Mappings].", "Guitar Rig Shortcuts", "Iconx")
-        ExitApp
+        Abort("No usable mappings were found in [Mappings].")
     }
 }
 
 ParseMappingAction(action) {
-    if RegExMatch(action, "i)^cc:(\d{1,3})$", &match) {
+    if RegExMatch(action, "i)^cc:(\d{1,3})(?::(\d{1,3}))?$", &match) {
         number := match[1] + 0
-        return IsMidi7Bit(number) ? { kind: "cc", number: number } : false
+        value := match[2] != "" ? match[2] + 0 : 127
+        return IsMidi7Bit(number) && IsMidi7Bit(value) ? { kind: "cc", number: number, value: value } : false
+    }
+
+    if RegExMatch(action, "i)^pulse:(\d{1,3})$", &match) {
+        number := match[1] + 0
+        return IsMidi7Bit(number) ? { kind: "pulse", number: number } : false
+    }
+
+    if RegExMatch(action, "i)^toggle:(\d{1,3})(?::(\d{1,3}))?$", &match) {
+        number := match[1] + 0
+        firstValue := match[2] != "" ? match[2] + 0 : 127
+        if !IsMidi7Bit(number) || !(firstValue = 0 || firstValue = 127) {
+            return false
+        }
+
+        nextValue := firstValue
+        return { kind: "toggle", number: number, nextValue: nextValue }
     }
 
     if RegExMatch(action, "i)^pc:(\d{1,3})$", &match) {
@@ -197,14 +317,20 @@ IsMidi7Bit(number) {
     return number >= 0 && number <= 127
 }
 
-HandleMappedKey(keyName, kind, number, *) {
+HandleMappedKey(keyName, action, *) {
     waitKey := KeyWaitName(keyName)
 
-    if kind = "cc" {
-        SendCCPulse(number)
+    if action.kind = "cc" {
+        SendCC(action.number, action.value)
     }
-    else if kind = "pc" {
-        SendProgramChange(number)
+    else if action.kind = "pulse" {
+        SendCCPulse(action.number)
+    }
+    else if action.kind = "toggle" {
+        SendCCToggle(action)
+    }
+    else if action.kind = "pc" {
+        SendProgramChange(action.number)
     }
 
     if waitKey != "" {
@@ -218,11 +344,21 @@ KeyWaitName(keyName) {
     return keyName
 }
 
+SendCC(cc, value := 127) {
+    SendMidi("cc " cc " " value)
+}
+
+SendCCToggle(action) {
+    value := action.nextValue
+    SendCC(action.number, value)
+    action.nextValue := value = 127 ? 0 : 127
+}
+
 SendCCPulse(cc) {
     global PulseMs
-    SendMidi("cc " cc " 127")
+    SendCC(cc, 127)
     Sleep PulseMs
-    SendMidi("cc " cc " 0")
+    SendCC(cc, 0)
 }
 
 SendProgramChange(programNumber) {
@@ -253,8 +389,7 @@ StartOrReuseGuitarRig() {
     }
 
     if GuitarRigExe = "" || !FileExist(GuitarRigExe) {
-        MsgBox("Guitar Rig executable was not found:`n" GuitarRigExe "`n`nEdit config\gr-shortcuts.ini.", "Guitar Rig Shortcuts", "Iconx")
-        ExitApp
+        Abort("Guitar Rig executable was not found:`n" GuitarRigExe "`n`nEdit config\gr-shortcuts.ini.")
     }
 
     target := '"' GuitarRigExe '"'
@@ -264,8 +399,7 @@ StartOrReuseGuitarRig() {
 
     Run(target, , , &pid)
     if !pid {
-        MsgBox("Guitar Rig did not start.", "Guitar Rig Shortcuts", "Iconx")
-        ExitApp
+        Abort("Guitar Rig did not start.")
     }
 
     return pid
