@@ -59,7 +59,7 @@ By default, this tool tries to clean up after itself:
 - `CloseMapperWithGuitarRig=1` closes the AutoHotkey mapper when Guitar Rig closes.
 - `CloseLoopMidiWithMapper=1` closes loopMIDI only if this mapper started it. If loopMIDI was already running, it is left alone.
 
-This is convenient, but it means the next launch may be slower than starting Guitar Rig directly, because the launcher may need to start AutoHotkey, start loopMIDI, and check the MIDI port before Guitar Rig is ready.
+This is convenient, but it means the next launch may be slower than starting Guitar Rig directly, because the launcher may need to start AutoHotkey and loopMIDI before Guitar Rig starts. It checks the MIDI port after starting Guitar Rig; if the port is missing, you will see a warning.
 
 For faster repeated Guitar Rig starts, edit [gr-shortcuts.ini](/config/gr-shortcuts.ini) and use:
 
@@ -68,7 +68,7 @@ CloseMapperWithGuitarRig=0
 CloseLoopMidiWithMapper=0
 ```
 
-Then start this tool once and leave it running. The mapper only captures keys while Guitar Rig is focused, so it can stay open in the background. For the fastest repeated starts, open Guitar Rig normally after the mapper is already running. The launcher still works, but it still has to start a fresh mapper process and check the MIDI port.
+Then start this tool once and leave it running. The mapper only captures keys while Guitar Rig is focused, so it can stay open in the background. For the fastest repeated starts, open Guitar Rig normally after the mapper is already running. The launcher still works, but it still has to start a fresh mapper process.
 
 ## Manual Setup
 

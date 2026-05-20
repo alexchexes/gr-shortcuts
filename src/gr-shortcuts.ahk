@@ -41,7 +41,6 @@ if !FileExist(SendMidiPath) {
 
 if !ValidateConfigOnly {
     StartLoopMidiIfPossible()
-    CheckMidiPortVisible()
 }
 
 RegisterMappings()
@@ -55,6 +54,8 @@ guitarRigPid := StartOrReuseGuitarRig()
 if CloseMapperWithGuitarRig && guitarRigPid {
     SetTimer(WatchGuitarRig.Bind(guitarRigPid), 1000)
 }
+
+WarnIfMidiPortMissing()
 
 TrayTip("Guitar Rig Shortcuts", "Mapper is running for " GuitarRigWindow, 3)
 
@@ -194,15 +195,20 @@ LoopMidiCandidates() {
     return candidates
 }
 
-CheckMidiPortVisible() {
+WarnIfMidiPortMissing() {
     global MidiPort
 
     if !MidiPortIsListed() {
-        Abort(
-            "MIDI port was not found: " MidiPort "`n`n"
+        MsgBox(
+            "Guitar Rig is open or starting, but the MIDI port was not found: " MidiPort "`n`n"
+            "Keyboard shortcuts may not work until the port issue is fixed and Guitar Rig is restarted.`n`n"
             "Open loopMIDI and make sure the port exists, then restart Windows or restart the Windows MIDI Service.`n`n"
+            "To restart the Windows MIDI Service manually, open PowerShell as administrator and run:`n"
+            "Restart-Service midisrv`n`n"
             "You can verify the port with:`n"
-            "tools\sendmidi\sendmidi.exe list"
+            "tools\sendmidi\sendmidi.exe list",
+            "Guitar Rig Shortcuts",
+            "Icon!"
         )
     }
 }
