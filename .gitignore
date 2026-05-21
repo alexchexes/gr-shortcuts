@@ -5,3 +5,5 @@ tools/sendmidi/
 
 # User-local config. setup.ps1 creates it from config/gr-shortcuts.example.ini.
 /config/gr-shortcuts.ini
+
+/dist
