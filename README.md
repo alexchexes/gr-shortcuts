@@ -18,7 +18,7 @@ It uses three small pieces:
 - [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) - to create a virtual MIDI port that Guitar Rig can receive.
 - [SendMIDI](https://github.com/gbevin/SendMIDI) - to send MIDI CC messages to that virtual MIDI port.
 
-The mapper only captures configured keys while the Guitar Rig 7 standalone app is focused. Outside Guitar Rig, those keys behave normally.
+The mapper only captures configured keys while the main Guitar Rig 7 standalone window is focused. Outside Guitar Rig, those keys behave normally.
 
 ```text
 keyboard key -> AutoHotkey focus filter -> SendMIDI -> loopMIDI port -> Guitar Rig MIDI Learn
@@ -163,7 +163,7 @@ Left/right modifiers are available in the config, but disabled by default becaus
 
 Key combinations also work. AutoHotkey uses `^` for Ctrl, `!` for Alt, `+` for Shift, and `#` for the Windows key, for example `^1=cc:36` means `Ctrl+1`. The config contains commented-out examples. Be careful with `Alt` and Windows-key combinations because they may interfere with normal Windows shortcuts.
 
-Enabled keys are captured while Guitar Rig is focused. For example, if you enable `Alt`, `Alt+Tab` may stop working while Guitar Rig is focused.
+Enabled keys are captured while the main Guitar Rig window is focused. For example, if you enable `Alt`, `Alt+Tab` may stop working while Guitar Rig is focused. Guitar Rig-owned Windows dialogs such as Save As are left alone.
 
 Guitar Rig keyboard shortcuts manual: <https://www.native-instruments.com/ni-tech-manuals/guitar-rig-manual/en/keyboard-shortcuts>
 

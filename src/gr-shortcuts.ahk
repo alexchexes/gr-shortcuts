@@ -239,15 +239,13 @@ MidiPortIsListed() {
 }
 
 RegisterMappings() {
-    global GuitarRigWindow
-
     mappingSection := ReadSection("Mappings")
     if Trim(mappingSection) = "" {
         Abort("No mappings were found in [Mappings].")
     }
 
     registeredCount := 0
-    HotIfWinActive(GuitarRigWindow)
+    HotIf(MappedKeyIsActive)
 
     Loop Parse mappingSection, "`n", "`r" {
         line := Trim(A_LoopField)
@@ -281,10 +279,26 @@ RegisterMappings() {
         }
     }
 
-    HotIfWinActive()
+    HotIf()
 
     if registeredCount = 0 {
         Abort("No usable mappings were found in [Mappings].")
+    }
+}
+
+MappedKeyIsActive(*) {
+    global GuitarRigWindow
+
+    if !WinActive(GuitarRigWindow) {
+        return false
+    }
+
+    try {
+        ; #32770 covers Windows dialogs such as the Guitar Rig-owned Save As dialog.
+        return WinGetClass("A") != "#32770"
+    }
+    catch {
+        return false
     }
 }
 
