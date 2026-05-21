@@ -10,6 +10,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ConfigPath = Join-Path $Root 'config\gr-shortcuts.ini'
+$ConfigExamplePath = Join-Path $Root 'config\gr-shortcuts.example.ini'
 $SendMidiDir = Join-Path $Root 'tools\sendmidi'
 $SendMidiExe = Join-Path $SendMidiDir 'sendmidi.exe'
 $SendMidiVersion = '1.3.1'
@@ -48,6 +49,30 @@ function Install-WingetPackage {
     Invoke-SetupCommand "Installing $Name via winget" {
         winget install --id $Id --exact --accept-package-agreements --accept-source-agreements
     }
+}
+
+function Ensure-UserConfig {
+    Write-Step 'Preparing config'
+
+    if (Test-Path -LiteralPath $ConfigPath) {
+        Write-Host "Config already exists: $ConfigPath"
+        Write-Host 'Setup will not overwrite it.'
+        return
+    }
+
+    if ($DryRun) {
+        Write-Host "Dry run: would create $ConfigPath from $ConfigExamplePath."
+        return
+    }
+
+    if (-not (Test-Path -LiteralPath $ConfigExamplePath)) {
+        throw "Default config template was not found: $ConfigExamplePath"
+    }
+
+    $configDir = Split-Path -Parent $ConfigPath
+    New-Item -ItemType Directory -Path $configDir -Force | Out-Null
+    Copy-Item -LiteralPath $ConfigExamplePath -Destination $ConfigPath -Force
+    Write-Host "Created $ConfigPath"
 }
 
 function Get-ConfigValue {
@@ -296,6 +321,8 @@ function New-DesktopShortcut {
         Write-Host "Created $shortcutPath"
     }
 }
+
+Ensure-UserConfig
 
 if (-not $SkipWinget) {
     if (Get-Command winget -ErrorAction SilentlyContinue) {

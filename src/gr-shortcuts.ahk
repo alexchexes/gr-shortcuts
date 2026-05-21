@@ -11,7 +11,7 @@ RootDir := RegExReplace(ScriptDir, "\\src$")
 ConfigPath := RootDir "\config\gr-shortcuts.ini"
 
 if !FileExist(ConfigPath) {
-    Abort("Missing config file:`n" ConfigPath)
+    Abort("Missing config file:`n" ConfigPath "`n`nRun setup.bat first.")
 }
 
 GuitarRigExe := ResolveConfiguredPath(ReadSetting("App", "GuitarRigExe", ""))

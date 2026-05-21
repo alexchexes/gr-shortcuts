@@ -38,19 +38,36 @@ keyboard key -> AutoHotkey focus filter -> SendMIDI -> loopMIDI port -> Guitar R
 
 2. Close Guitar Rig if it is open, then run `setup.bat` in the extracted folder.
 
-   Setup will install AutoHotkey v2 and loopMIDI through `winget`, download `sendmidi.exe`, check the configured Guitar Rig path, and offer to create a desktop shortcut that starts Guitar Rig and this tool at the same time.
+   Setup will install AutoHotkey v2 and loopMIDI through `winget`, download `sendmidi.exe`, create `config\gr-shortcuts.ini` from [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini) if needed, check the configured Guitar Rig path, and offer to create a desktop shortcut that starts Guitar Rig and this tool at the same time.
 
 3. When setup asks, create a loopMIDI port named `GR7 Control`, leave loopMIDI running, then return to setup and press Enter.
 
    Setup checks whether SendMIDI can see the port. If Windows does not expose the port yet, setup offers to restart the Windows MIDI Service with an admin prompt. You can also restart the service manually or reboot Windows.
 
-4. If setup says it cannot find Guitar Rig, adjust [gr-shortcuts.ini `GuitarRigExe=`](/config/gr-shortcuts.ini#L5). The default uses `%ProgramFiles%\Native Instruments\Guitar Rig 7\Guitar Rig 7.exe`.
+4. If setup says it cannot find Guitar Rig, adjust `GuitarRigExe=` in `config\gr-shortcuts.ini`. The default uses `%ProgramFiles%\Native Instruments\Guitar Rig 7\Guitar Rig 7.exe`.
 
 5. Start Guitar Rig normally once (without `launch-gr-shortcuts.bat`). In Guitar Rig, open `Preferences -> MIDI` and enable the `GR7 Control` input.
 
    If the checkbox glitches or does not stay enabled, close and reopen Guitar Rig.
 
 6. After that, start Guitar Rig and this tool at the same time by using either the `Guitar Rig Shortcuts` desktop shortcut, if you opted in during setup, or by running `launch-gr-shortcuts.bat`. The launcher starts the mapper, the mapper starts loopMIDI if needed, and then Guitar Rig starts. The mapper exits when Guitar Rig exits. If the mapper started loopMIDI, it closes loopMIDI too. If loopMIDI was already running, it leaves it alone.
+
+## Updating
+
+To check for updates, run:
+
+```bat
+.\check-update.bat
+```
+
+If a newer version exists:
+
+1. Close Guitar Rig and Guitar Rig Shortcuts.
+2. Download the latest release zip from the [latest release](https://github.com/alexchexes/gr-shortcuts/releases/latest).
+3. Extract it over your existing `gr-shortcuts` folder.
+4. Run `setup.bat` again if the release notes ask for it.
+
+Your `config\gr-shortcuts.ini` file is user-local and is not included in the release zip. Setup creates it from [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini) only when it is missing.
 
 ## Startup Behavior
 
@@ -61,7 +78,7 @@ By default, this tool tries to clean up after itself:
 
 This is convenient, but it means the next launch may be slower than starting Guitar Rig directly, because the launcher may need to start AutoHotkey and loopMIDI before Guitar Rig starts. It checks the MIDI port after starting Guitar Rig; if the port is missing, you will see a warning.
 
-For faster repeated Guitar Rig starts, edit [gr-shortcuts.ini](/config/gr-shortcuts.ini) and use:
+For faster repeated Guitar Rig starts, edit `config\gr-shortcuts.ini` and use:
 
 ```ini
 CloseMapperWithGuitarRig=0
@@ -103,7 +120,7 @@ Microsoft tracks this as a Windows MIDI Services issue where dynamic ports such 
 
 As mentioned above, this works by mapping PC keyboard keys to MIDI signals for Guitar Rig.
 By default, only a limited set of keys is enabled to avoid making the whole keyboard unusable while Guitar Rig is running.
-The enabled keys and exact `Key=cc number` mappings can be found and adjusted in [gr-shortcuts.ini:22](/config/gr-shortcuts.ini#L22).
+The enabled keys and exact `Key=cc number` mappings can be found and adjusted in `config\gr-shortcuts.ini`. The default template is [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini).
 
 The default enabled keys are meant to be a small numpad-first control surface:
 
@@ -172,7 +189,7 @@ Before opening a PR, run the config check:
 .\validate-config.bat
 ```
 
-If you change [gr-shortcuts.ini:22](/config/gr-shortcuts.ini#L22), keep the example CC numbers unique so users can uncomment keys without searching for a free number.
+If you change [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini), keep the example CC numbers unique so users can uncomment keys without searching for a free number.
 
 ## TODO
 
