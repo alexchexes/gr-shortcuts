@@ -76,7 +76,7 @@ If `setup.bat` cannot install everything automatically, you can install everythi
 
 1. Install AutoHotkey v2: <https://www.autohotkey.com/>
 2. Install loopMIDI: <https://www.tobias-erichsen.de/software/loopmidi.html>
-3. Download SendMIDI for Windows: <https://github.com/gbevin/SendMIDI/releases/latest>
+3. Download SendMIDI for Windows `1.3.1`: <https://github.com/gbevin/SendMIDI/releases/tag/1.3.1>
 4. Extract `sendmidi.exe` to `tools\sendmidi\sendmidi.exe`.
 
 Then run `setup.bat` again with the dependencies already installed, or continue from the loopMIDI port step above.
@@ -127,6 +127,7 @@ There are a few mapping types:
 - `cc:N:V` sends CC `N` with a specific value `V`, where `V` can be `0-127`. For example, `cc:20:64` sends a roughly "50%" value.
 - `toggle:N` alternates between `127` and `0`. This is the better choice for Play/Pause or bypass-style controls.
 - `pulse:N` sends `127`, then `0`. This is useful for momentary controls such as Stop.
+- `pc:N` sends MIDI Program Change `N`. Use this only for MIDI targets that support Program Change; normal Guitar Rig Learn MIDI controls usually use CC.
 
 For knobs and other continuous parameters, Guitar Rig uses absolute MIDI CC values. A keyboard key can set one fixed value with `cc:N:V`, or switch between two values with `toggle:N`. Gradual increase/decrease by repeated keypresses is not implemented yet.
 
@@ -160,7 +161,7 @@ Guitar Rig MIDI Learn manual: <https://www.native-instruments.com/ni-tech-manual
 Run this after editing mappings if you want a quick key-name check:
 
 ```powershell
-& "$env:ProgramFiles\AutoHotkey\v2\AutoHotkey64.exe" .\src\gr-shortcuts.ahk --validate-config
+.\validate-config.bat
 ```
 
 ## Contributor Notes
@@ -168,7 +169,7 @@ Run this after editing mappings if you want a quick key-name check:
 Before opening a PR, run the config check:
 
 ```powershell
-& "$env:ProgramFiles\AutoHotkey\v2\AutoHotkey64.exe" .\src\gr-shortcuts.ahk --validate-config
+.\validate-config.bat
 ```
 
 If you change [gr-shortcuts.ini:22](/config/gr-shortcuts.ini#L22), keep the example CC numbers unique so users can uncomment keys without searching for a free number.
@@ -177,3 +178,7 @@ If you change [gr-shortcuts.ini:22](/config/gr-shortcuts.ini#L22), keep the exam
 
 - Add a small GUI for editing key mappings without opening the config file manually.
 - Consider adding `inc:N:STEP` and `dec:N:STEP` mappings for keyboard-controlled gradual changes.
+
+## License
+
+MIT. See [LICENSE](/LICENSE).

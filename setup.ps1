@@ -12,6 +12,10 @@ $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ConfigPath = Join-Path $Root 'config\gr-shortcuts.ini'
 $SendMidiDir = Join-Path $Root 'tools\sendmidi'
 $SendMidiExe = Join-Path $SendMidiDir 'sendmidi.exe'
+$SendMidiVersion = '1.3.1'
+$SendMidiAssetName = "sendmidi-windows-$SendMidiVersion.zip"
+$SendMidiDownloadUrl = "https://github.com/gbevin/SendMIDI/releases/download/$SendMidiVersion/$SendMidiAssetName"
+$SendMidiZipSha256 = '9FA5904014E7E1243392AFFD525244A304E12F6399E1012E5AEE5739B8E4B0E3'
 $RestartMidiServiceScript = Join-Path $Root 'scripts\restart-midi-service.ps1'
 
 function Write-Step {
@@ -309,27 +313,22 @@ if (-not $SkipSendMidi) {
         Write-Host $SendMidiExe
     }
     else {
-        Invoke-SetupCommand 'Downloading SendMIDI for Windows' {
-            $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/gbevin/SendMIDI/releases/latest' -Headers @{
-                'User-Agent' = 'gr-shortcuts-setup'
-            }
-            $asset = $release.assets |
-                Where-Object { $_.name -match '^sendmidi-windows-.*\.zip$' } |
-                Select-Object -First 1
-
-            if (-not $asset) {
-                throw 'Could not find a Windows SendMIDI release asset.'
-            }
-
+        Invoke-SetupCommand "Downloading SendMIDI $SendMidiVersion for Windows" {
             $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('gr-shortcuts-sendmidi-' + [guid]::NewGuid())
-            $zipPath = Join-Path $tempRoot $asset.name
+            $zipPath = Join-Path $tempRoot $SendMidiAssetName
             $extractPath = Join-Path $tempRoot 'extract'
 
             New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
             New-Item -ItemType Directory -Path $extractPath -Force | Out-Null
 
             try {
-                Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zipPath
+                Invoke-WebRequest -Uri $SendMidiDownloadUrl -OutFile $zipPath
+
+                $actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $zipPath).Hash
+                if ($actualHash -ne $SendMidiZipSha256) {
+                    throw "Downloaded SendMIDI archive SHA256 mismatch. Expected $SendMidiZipSha256 but got $actualHash."
+                }
+
                 Expand-Archive -LiteralPath $zipPath -DestinationPath $extractPath -Force
 
                 $downloadedExe = Get-ChildItem -LiteralPath $extractPath -Recurse -Filter 'sendmidi.exe' |
