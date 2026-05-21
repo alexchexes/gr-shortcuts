@@ -1,8 +1,8 @@
-# Guitar Rig PC keyboard shortcuts
+# Guitar Rig PC Keyboard Shortcuts
 
-A pretty simple script that solves a real pain for Guitar Rig users who do not have a MIDI device.
+A simple utility that solves a pain for Guitar Rig users who do not have a MIDI device.
 
-Guitar Rig does not allow custom keybindings for a normal PC keyboard. It only allows MIDI controls to be mapped via the "Learn MIDI" feature.
+Guitar Rig does not allow custom keybindings for a regular PC keyboard. It only allows MIDI controls to be mapped via the "Learn MIDI" feature.
 
 This tool lets you work around that limitation in a simple way. After setting it up once, you can start Guitar Rig and this tool from a normal desktop shortcut and use it right away.
 
@@ -10,13 +10,13 @@ This tool lets you work around that limitation in a simple way. After setting it
 
 In simple terms: it makes Guitar Rig think that when you press a key on your PC keyboard, you are pressing a control on a MIDI device, such as a synthesizer.
 
-To achieve that, it uses a few programs:
+When you press a configured key, Guitar Rig receives a MIDI message that can be used to bind a certain action/knob for that message through "Learn MIDI".
+
+It uses three small pieces:
 
 - [AutoHotkey v2](https://www.autohotkey.com/) - to capture configured keyboard keys while Guitar Rig is focused.
 - [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) - to create a virtual MIDI port that Guitar Rig can receive.
 - [SendMIDI](https://github.com/gbevin/SendMIDI) - to send MIDI CC messages to that virtual MIDI port.
-
-Together, that turns PC keyboard keys into MIDI controls for Guitar Rig "Learn MIDI" feature.
 
 The mapper only captures configured keys while the Guitar Rig 7 standalone app is focused. Outside Guitar Rig, those keys behave normally.
 
@@ -28,9 +28,9 @@ keyboard key -> AutoHotkey focus filter -> SendMIDI -> loopMIDI port -> Guitar R
 
 - Tested only with Guitar Rig 7.
 - Windows only for now. Let me know via an issue or PR if you need support for macOS.
-- It cannot help with binding shortcuts for actions that are not exposed through "Learn MIDI" in Guitar Rig.
+- It cannot bind actions that Guitar Rig does not expose through "Learn MIDI".
   For example, you cannot bind "load a specific preset when I press F1/F2/F3" because Guitar Rig does not provide Learn MIDI for specific presets.
-  > However, you can bind ↑/↓ to switch presets from the filtered list of presets currently visible in the preset browser. Combined with color labels, that solves the pain almost completely.
+  > However, you can bind `←`/`→` to switch presets from the currently visible filtered list in the Browser.
 
 ## Setup
 
@@ -48,7 +48,7 @@ keyboard key -> AutoHotkey focus filter -> SendMIDI -> loopMIDI port -> Guitar R
 
 5. Start Guitar Rig normally once (without `launch-gr-shortcuts.bat`). In Guitar Rig, open `Preferences -> MIDI` and enable the `GR7 Control` input.
 
-   If the checkbox glitches or does not stay enabled, close and reopen Guitar Rig.
+   If the checkbox does not stay enabled, close and reopen Guitar Rig.
 
 6. After that, start Guitar Rig and this tool at the same time by using either the `Guitar Rig Shortcuts` desktop shortcut, if you opted in during setup, or by running `launch-gr-shortcuts.bat`. The launcher starts the mapper, the mapper starts loopMIDI if needed, and then Guitar Rig starts. The mapper exits when Guitar Rig exits. If the mapper started loopMIDI, it closes loopMIDI too. If loopMIDI was already running, it leaves it alone.
 
@@ -67,16 +67,16 @@ If a newer version exists:
 3. Extract it over your existing `gr-shortcuts` folder.
 4. Run `setup.bat` again if the release notes ask for it.
 
-Your `config\gr-shortcuts.ini` file is user-local and is not included in the release zip. Setup creates it from [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini) only when it is missing.
+Your `config\gr-shortcuts.ini` file is user-local and is not included in the release zip. Setup creates it from [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini) only if the file is missing.
 
 ## Startup Behavior
 
-By default, this tool tries to clean up after itself:
+By default, the launcher cleans up the helper processes it starts:
 
 - `CloseMapperWithGuitarRig=1` closes the AutoHotkey mapper when Guitar Rig closes.
 - `CloseLoopMidiWithMapper=1` closes loopMIDI only if this mapper started it. If loopMIDI was already running, it is left alone.
 
-This is convenient, but it means the next launch may be slower than starting Guitar Rig directly, because the launcher may need to start AutoHotkey and loopMIDI before Guitar Rig starts. It checks the MIDI port after starting Guitar Rig; if the port is missing, you will see a warning.
+This keeps the session tidy, but the next launch may be slower than starting Guitar Rig directly because the launcher may need to start AutoHotkey and loopMIDI first. The MIDI port check runs after Guitar Rig starts; if the port is missing, you will see a warning.
 
 For faster repeated Guitar Rig starts, edit `config\gr-shortcuts.ini` and use:
 
@@ -85,18 +85,18 @@ CloseMapperWithGuitarRig=0
 CloseLoopMidiWithMapper=0
 ```
 
-Then start this tool once and leave it running. The mapper only captures keys while Guitar Rig is focused, so it can stay open in the background. For the fastest repeated starts, open Guitar Rig normally after the mapper is already running. The launcher still works, but it still has to start a fresh mapper process.
+Then start Guitar Rig Shortcuts once and leave it running. The mapper only captures keys while Guitar Rig is focused, so it can stay open in the background. For the fastest repeated starts, open Guitar Rig normally after the mapper is already running. The launcher still works, but it starts a new mapper process.
 
 ## Manual Setup
 
-If `setup.bat` cannot install everything automatically, you can install everything the script needs manually:
+If `setup.bat` cannot install the dependencies automatically, install them manually:
 
 1. Install AutoHotkey v2: <https://www.autohotkey.com/>
 2. Install loopMIDI: <https://www.tobias-erichsen.de/software/loopmidi.html>
 3. Download SendMIDI for Windows `1.3.1`: <https://github.com/gbevin/SendMIDI/releases/tag/1.3.1>
 4. Extract `sendmidi.exe` to `tools\sendmidi\sendmidi.exe`.
 
-Then run `setup.bat` again with the dependencies already installed, or continue from the loopMIDI port step above.
+Then run `setup.bat` again, or continue from the loopMIDI port step above.
 
 ## Troubleshooting
 
@@ -120,21 +120,21 @@ Microsoft tracks this as a Windows MIDI Services issue where dynamic ports such 
 
 As mentioned above, this works by mapping PC keyboard keys to MIDI signals for Guitar Rig.
 By default, only a limited set of keys is enabled to avoid making the whole keyboard unusable while Guitar Rig is running.
-The enabled keys and exact `Key=cc number` mappings can be found and adjusted in `config\gr-shortcuts.ini`. The default template is [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini).
+Enabled keys and MIDI mappings are configured in `config\gr-shortcuts.ini`. The default template is [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini).
 
-The default enabled keys are meant to be a small numpad-first control surface:
+The default enabled keys are meant to work as a small numpad-first control surface:
 
-| Key | Mapping | Suggested use |
-| --- | --- | --- |
-| `←` | `cc:21` | Previous preset/control |
-| `→` | `cc:22` | Next preset/control |
-| `Numpad Enter` | `toggle:53` | Tapedeck Play/Pause, or any on/off control |
-| `Numpad .` | `pulse:51` | Tapedeck Stop, or another momentary action |
-| `Numpad +` | `cc:52` | Extra one-shot control |
-| `Numpad -` | `cc:19` | Extra one-shot control |
-| `Numpad 0` | `toggle:50` | Main macro/effect toggle |
-| `Numpad 1-5` | `toggle:54`, `toggle:55`, `toggle:56`, `toggle:11`, `toggle:12` | Macros or effect bypass buttons |
-| Backtick/grave key | `cc:49` | Extra easy-to-reach control |
+| Key                | Mapping                                                         | Suggested use                              |
+| ------------------ | --------------------------------------------------------------- | ------------------------------------------ |
+| `←`                | `cc:21`                                                         | Previous preset/control                    |
+| `→`                | `cc:22`                                                         | Next preset/control                        |
+| `Numpad Enter`     | `toggle:53`                                                     | Tapedeck Play/Pause, or any on/off control |
+| `Numpad .`         | `pulse:51`                                                      | Tapedeck Stop, or another momentary action |
+| `Numpad +`         | `cc:52`                                                         | Extra one-shot control                     |
+| `Numpad -`         | `cc:19`                                                         | Extra one-shot control                     |
+| `Numpad 0`         | `toggle:50`                                                     | Main macro/effect toggle                   |
+| `Numpad 1-5`       | `toggle:54`, `toggle:55`, `toggle:56`, `toggle:11`, `toggle:12` | Macros or effect bypass buttons            |
+| Backtick/grave key | `cc:49`                                                         | Extra easy-to-reach control                |
 
 You can reassign any of these to any MIDI-learnable Guitar Rig control.
 
@@ -150,7 +150,7 @@ For knobs and other continuous parameters, Guitar Rig uses absolute MIDI CC valu
 
 If a `cc:N` mapping works only once, the control probably expects changing values. Try `toggle:N` for on/off controls or `pulse:N` for momentary controls.
 
-The example CC numbers in the config are unique, so you can usually just uncomment keys. Change CC numbers only when you want two keys to trigger the same Guitar Rig action, or when you need to avoid conflicts with another MIDI controller.
+The example CC numbers in the config are unique, so you can usually just uncomment keys. Change CC numbers when you want two keys to trigger the same Guitar Rig action, or when you need to avoid conflicts with another MIDI controller.
 
 Some useful keys are disabled by default because Guitar Rig already uses them as normal keyboard shortcuts. For example, Guitar Rig uses `Space`, `↑`, `↓`, `Enter`, `Escape`, `Tab`, and `Delete` in its browser and dialogs. You can still uncomment and map them if you want MIDI behavior to take over.
 
@@ -191,11 +191,11 @@ Before opening a PR, run the config check:
 
 If you change [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini), keep the example CC numbers unique so users can uncomment keys without searching for a free number.
 
+## License
+
+MIT. See [LICENSE](/LICENSE).
+
 ## TODO
 
 - Add a small GUI for editing key mappings without opening the config file manually.
 - Consider adding `inc:N:STEP` and `dec:N:STEP` mappings for keyboard-controlled gradual changes.
-
-## License
-
-MIT. See [LICENSE](/LICENSE).

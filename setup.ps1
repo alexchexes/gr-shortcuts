@@ -219,7 +219,7 @@ function Wait-ForMidiPort {
     Write-Step 'Configure loopMIDI'
 
     if ($DryRun) {
-        Write-Host "Dry run: would ask user to create and verify loopMIDI port '$MidiPortName'."
+        Write-Host "Dry run: would prompt for loopMIDI port '$MidiPortName' and verify it with SendMIDI."
         return
     }
 
@@ -231,7 +231,7 @@ function Wait-ForMidiPort {
 
     if (Test-GuitarRigRunning) {
         Write-Host '1. Close Guitar Rig before continuing.'
-        Write-Host '   Setup detected that Guitar Rig is running. It may not see new MIDI ports until restarted.'
+        Write-Host '   Guitar Rig is running. It may not see new MIDI ports until it is restarted.'
     }
     else {
         Write-Host '1. Close Guitar Rig if it is open.'
@@ -240,13 +240,13 @@ function Wait-ForMidiPort {
     Write-Host '2. Start loopMIDI if it is not already running.'
     $loopMidiStatus = Start-LoopMidiIfPossible
     if ($loopMidiStatus -eq 'running') {
-        Write-Host '   OK: loopMIDI is already running. Do not close it.'
+        Write-Host '   loopMIDI is already running. Leave it open.'
     }
     elseif ($loopMidiStatus -eq 'started') {
-        Write-Host '   OK: setup started loopMIDI. Do not close it.'
+        Write-Host '   Started loopMIDI. Leave it open.'
     }
     else {
-        Write-Host '   Setup could not find loopMIDI automatically. Open loopMIDI from the Start menu.'
+        Write-Host '   Could not find loopMIDI automatically. Open loopMIDI from the Start menu.'
     }
     Write-Host "3. In loopMIDI, type '$MidiPortName' in the 'New port-name' field, press '+', and leave loopMIDI running."
     Read-Host 'Press Enter here after creating the port'
@@ -403,7 +403,7 @@ $guitarRigExe = Get-GuitarRigExePath
 
 Write-Step 'Setup finished'
 if ($guitarRigExe -and (Test-Path -LiteralPath $guitarRigExe)) {
-    Write-Host "Guitar Rig path OK: $guitarRigExe"
+    Write-Host "Guitar Rig path found: $guitarRigExe"
 }
 else {
     Write-Host 'Guitar Rig executable was not found at:'
@@ -416,7 +416,7 @@ else {
 Write-Host ''
 Write-Host 'Next steps:'
 Write-Host '1. Start Guitar Rig normally once and enable "GR7 Control" in Preferences -> MIDI.'
-Write-Host '   If the checkbox glitches or does not stay enabled, close and reopen Guitar Rig.'
+Write-Host '   If the checkbox does not stay enabled, close and reopen Guitar Rig.'
 Write-Host '2. Edit keyboard mappings and MIDI action types later in:'
 Write-Host "   $ConfigPath"
 Write-Host '3. Start with launch-gr-shortcuts.bat, or use the desktop shortcut if you created one.'

@@ -40,7 +40,7 @@ catch {
     Write-Host "Could not check for updates from $Repo."
     Write-Host 'Make sure you are online and try again.'
     Write-Host ''
-    Write-Host 'If the issue persists, create an issue:'
+    Write-Host 'If this keeps failing, report it here:'
     Write-Host 'https://github.com/alexchexes/gr-shortcuts/issues'
     Write-Host ''
     Write-Host "Error: $($_.Exception.Message)"
@@ -68,4 +68,4 @@ Write-Host '2. Download the latest release zip.'
 Write-Host '3. Extract it over your existing gr-shortcuts folder.'
 Write-Host '4. Run setup.bat again if the release notes ask for it.'
 Write-Host ''
-Write-Host 'Your config\gr-shortcuts.ini file is user-local and should be preserved.'
+Write-Host 'Your config\gr-shortcuts.ini file is user-local and will be preserved.'

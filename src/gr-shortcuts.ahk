@@ -201,7 +201,7 @@ WarnIfMidiPortMissing() {
     if !MidiPortIsListed() {
         MsgBox(
             "Guitar Rig is open or starting, but the MIDI port was not found: " MidiPort "`n`n"
-            "Keyboard shortcuts may not work until the port issue is fixed and Guitar Rig is restarted.`n`n"
+            "Keyboard shortcuts will not work until the port is visible to Windows MIDI apps and Guitar Rig is restarted.`n`n"
             "Open loopMIDI and make sure the port exists, then restart Windows or restart the Windows MIDI Service.`n`n"
             "To restart the Windows MIDI Service manually, open PowerShell as administrator and run:`n"
             "Restart-Service midisrv`n`n"
@@ -377,7 +377,7 @@ SendMidi(args) {
     cmd := Format('"{1}" dev "{2}" ch {3} {4}', SendMidiPath, MidiPort, MidiChannel, args)
     exitCode := RunWait(cmd, , "Hide")
     if exitCode != 0 {
-        TrayTip("Guitar Rig Shortcuts", "SendMIDI failed. Check loopMIDI port: " MidiPort, 5)
+        TrayTip("Guitar Rig Shortcuts", "Could not send MIDI. Check loopMIDI port: " MidiPort, 5)
     }
 }
 
