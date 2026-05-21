@@ -4,7 +4,7 @@
 #UseHook
 
 A_IconTip := "Guitar Rig Shortcuts"
-ValidateConfigOnly := HasCliArg("--validate-config")
+ValidateConfigOnly := HasCliArg("validate-config")
 
 ScriptDir := A_ScriptDir
 RootDir := RegExReplace(ScriptDir, "\\src$")

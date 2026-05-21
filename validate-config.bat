@@ -14,5 +14,5 @@ if not defined AHK (
   exit /b 1
 )
 
-"%AHK%" "%ROOT%src\gr-shortcuts.ahk" --validate-config
+start "" /wait "%AHK%" "%ROOT%src\gr-shortcuts.ahk" validate-config
 exit /b %ERRORLEVEL%

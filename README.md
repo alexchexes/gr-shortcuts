@@ -188,13 +188,7 @@ Run this after editing mappings if you want a quick key-name check:
 
 ## Contributor Notes
 
-Before opening a PR, run the config check:
-
-```powershell
-.\validate-config.bat
-```
-
-If you change [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini), keep the example CC numbers unique so users can uncomment keys without searching for a free number.
+See [CONTRIBUTING.md](/CONTRIBUTING.md) for contributor checks and the manual release checklist.
 
 ## License
 
@@ -202,5 +196,4 @@ MIT. See [LICENSE](/LICENSE).
 
 ## TODO
 
-- Add a small GUI for editing key mappings without opening the config file manually.
-- Consider adding `inc:N:STEP` and `dec:N:STEP` mappings for keyboard-controlled gradual changes.
+See [TODO.md](/TODO.md).
