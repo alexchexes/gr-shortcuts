@@ -60,12 +60,17 @@ To check for updates, run:
 .\check-update.bat
 ```
 
+To download and install the latest release automatically, run:
+
+```bat
+.\update.bat
+```
+
 If a newer version exists:
 
 1. Close Guitar Rig and Guitar Rig Shortcuts.
-2. Download the latest release zip from the [latest release](https://github.com/alexchexes/gr-shortcuts/releases/latest).
-3. Extract it over your existing `gr-shortcuts` folder.
-4. Run `setup.bat` again if the release notes ask for it.
+2. Run `update.bat`, or download the latest release zip from the [latest release](https://github.com/alexchexes/gr-shortcuts/releases/latest) and extract it over your existing `gr-shortcuts` folder.
+3. Run `setup.bat` again if the release notes ask for it.
 
 Your `config\gr-shortcuts.ini` file is user-local and is not included in the release zip. Setup creates it from [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini) only if the file is missing.
 

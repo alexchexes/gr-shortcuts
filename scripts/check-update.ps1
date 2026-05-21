@@ -49,8 +49,8 @@ catch {
 
 $latestVersion = Convert-ReleaseVersion -Value $release.tag_name
 
-Write-Host "Current version: $currentText"
-Write-Host "Latest version:  $($release.tag_name)"
+Write-Host "Current version: $currentVersion"
+Write-Host "Latest version:  $latestVersion"
 
 if ($latestVersion -le $currentVersion) {
     Write-Host ''
@@ -61,8 +61,9 @@ if ($latestVersion -le $currentVersion) {
 Write-Host ''
 Write-Host 'A newer version is available.'
 Write-Host "Download it from: $($release.html_url)"
+Write-Host 'Or run update.bat to download and install it automatically.'
 Write-Host ''
-Write-Host 'Update steps:'
+Write-Host 'Manual update steps:'
 Write-Host '1. Close Guitar Rig and Guitar Rig Shortcuts.'
 Write-Host '2. Download the latest release zip.'
 Write-Host '3. Extract it over your existing gr-shortcuts folder.'
