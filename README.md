@@ -1,5 +1,23 @@
 # Guitar Rig PC Keyboard Shortcuts
 
+<!-- TOC depthfrom:2 -->
+
+- [How it works](#how-it-works)
+- [Limitations](#limitations)
+- [Setup](#setup)
+- [Updating](#updating)
+- [Startup Behavior](#startup-behavior)
+- [Manual Setup](#manual-setup)
+- [Troubleshooting](#troubleshooting)
+- [Mapping Keys](#mapping-keys)
+- [Guitar Rig MIDI Learn](#guitar-rig-midi-learn)
+- [Validate Config](#validate-config)
+- [Contributor Notes](#contributor-notes)
+- [License](#license)
+- [TODO](#todo)
+
+<!-- /TOC -->
+
 A simple utility that solves a pain for Guitar Rig users who do not have a MIDI device.
 
 Guitar Rig does not allow custom keybindings for a regular PC keyboard. It only allows MIDI controls to be mapped via the "Learn MIDI" feature.
