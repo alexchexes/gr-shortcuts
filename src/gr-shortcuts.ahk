@@ -26,6 +26,8 @@ CloseLoopMidiWithMapper := ReadBoolSetting("App", "CloseLoopMidiWithMapper", tru
 
 LoopMidiStartedByMapper := false
 LoopMidiPid := 0
+CurrentGuitarRigPid := 0
+RestartingGuitarRig := false
 OnExit(CleanupBeforeExit)
 
 MidiPort := ReadSetting("MIDI", "Port", "GR7 Control")
@@ -49,10 +51,10 @@ if ValidateConfigOnly {
     ExitApp
 }
 
-guitarRigPid := StartOrReuseGuitarRig()
+CurrentGuitarRigPid := StartOrReuseGuitarRig()
 
-if CloseMapperWithGuitarRig && guitarRigPid {
-    SetTimer(WatchGuitarRig.Bind(guitarRigPid), 1000)
+if CloseMapperWithGuitarRig && CurrentGuitarRigPid {
+    SetTimer(WatchGuitarRig, 1000)
 }
 
 WarnIfMidiPortMissing()
@@ -199,18 +201,101 @@ WarnIfMidiPortMissing() {
     global MidiPort
 
     if !MidiPortIsListed() {
-        MsgBox(
+        result := MsgBox(
             "Guitar Rig is open or starting, but the MIDI port was not found: " MidiPort "`n`n"
-            "Keyboard shortcuts will not work until the port is visible to Windows MIDI apps and Guitar Rig is restarted.`n`n"
-            "Open loopMIDI and make sure the port exists, then restart Windows or restart the Windows MIDI Service.`n`n"
-            "To restart the Windows MIDI Service manually, open PowerShell as administrator and run:`n"
-            "Restart-Service midisrv`n`n"
-            "You can verify the port with:`n"
-            "tools\sendmidi\sendmidi.exe list",
+            "Keyboard shortcuts will not work until Windows MIDI apps can see this port and Guitar Rig is restarted.`n`n"
+            "This can happen on recent Windows 11 versions with dynamic MIDI ports such as loopMIDI.`n`n"
+            "Click OK to restart the Windows MIDI Service now. Windows will ask for administrator rights. "
+            "If the port becomes visible, Guitar Rig will be restarted too.`n`n"
+            "Click Cancel to keep Guitar Rig open and continue without keyboard shortcuts.",
             "Guitar Rig Shortcuts",
-            "Icon!"
+            "OKCancel Icon!"
         )
+
+        if result != "OK" {
+            return
+        }
+
+        if !RestartMidiService() {
+            MsgBox(
+                "The Windows MIDI Service restart did not complete.`n`n"
+                "You can restart it manually from an elevated PowerShell:`n"
+                "Restart-Service midisrv",
+                "Guitar Rig Shortcuts",
+                "Iconx"
+            )
+            return
+        }
+
+        Sleep 1500
+        if !MidiPortIsListed() {
+            MsgBox(
+                "The Windows MIDI Service restarted, but the MIDI port is still not visible: " MidiPort "`n`n"
+                "Open loopMIDI and make sure the port exists, then restart Windows or run this from an elevated PowerShell:`n"
+                "Restart-Service midisrv",
+                "Guitar Rig Shortcuts",
+                "Iconx"
+            )
+            return
+        }
+
+        if RestartGuitarRig() {
+            TrayTip("Guitar Rig Shortcuts", "Windows MIDI Service restarted. Guitar Rig was restarted.", 5)
+        }
     }
+}
+
+RestartMidiService() {
+    global RootDir
+
+    scriptPath := RootDir "\scripts\restart-midi-service.ps1"
+    if !FileExist(scriptPath) {
+        MsgBox(
+            "MIDI service restart helper was not found:`n" scriptPath,
+            "Guitar Rig Shortcuts",
+            "Iconx"
+        )
+        return false
+    }
+
+    powershell := EnvGet("SystemRoot") "\System32\WindowsPowerShell\v1.0\powershell.exe"
+    if !FileExist(powershell) {
+        powershell := "powershell.exe"
+    }
+
+    exitCode := RunWait('"' powershell '" -NoProfile -ExecutionPolicy Bypass -File "' scriptPath '"', , "Hide")
+    return exitCode = 0
+}
+
+RestartGuitarRig() {
+    global CurrentGuitarRigPid, RestartingGuitarRig
+
+    RestartingGuitarRig := true
+
+    if CurrentGuitarRigPid && ProcessExist(CurrentGuitarRigPid) {
+        try {
+            DetectHiddenWindows(true)
+            if WinExist("ahk_pid " CurrentGuitarRigPid) {
+                WinClose("ahk_pid " CurrentGuitarRigPid)
+                WinWaitClose("ahk_pid " CurrentGuitarRigPid, , 10)
+            }
+        }
+
+        if ProcessExist(CurrentGuitarRigPid) {
+            RestartingGuitarRig := false
+            MsgBox(
+                "Windows MIDI Service was restarted and the port is visible, but Guitar Rig did not close.`n`n"
+                "Close and reopen Guitar Rig manually to enable the MIDI port.",
+                "Guitar Rig Shortcuts",
+                "Icon!"
+            )
+            return false
+        }
+    }
+
+    CurrentGuitarRigPid := StartOrReuseGuitarRig()
+    RestartingGuitarRig := false
+    return CurrentGuitarRigPid != 0
 }
 
 MidiPortIsListed() {
@@ -425,8 +510,14 @@ StartOrReuseGuitarRig() {
     return pid
 }
 
-WatchGuitarRig(pid) {
-    if !ProcessExist(pid) {
+WatchGuitarRig() {
+    global CurrentGuitarRigPid, RestartingGuitarRig
+
+    if RestartingGuitarRig {
+        return
+    }
+
+    if CurrentGuitarRigPid && !ProcessExist(CurrentGuitarRigPid) {
         ExitApp
     }
 }

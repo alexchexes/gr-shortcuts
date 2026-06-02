@@ -111,7 +111,9 @@ If `GR7 Control` exists in loopMIDI but does not appear in Guitar Rig, first che
 tools\sendmidi\sendmidi.exe list
 ```
 
-If the list does not include `GR7 Control`, close Guitar Rig and restart Windows. Advanced users can instead restart the Windows MIDI Service from an elevated PowerShell:
+If the launcher detects this problem, it offers to restart the Windows MIDI Service for you. This requires administrator approval. If the restart succeeds and the port becomes visible, Guitar Rig is restarted so it can see the port.
+
+If you want to do the same thing manually, close Guitar Rig and restart Windows. Advanced users can instead restart the Windows MIDI Service from an elevated PowerShell:
 
 ```powershell
 Restart-Service midisrv
