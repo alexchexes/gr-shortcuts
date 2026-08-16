@@ -18,6 +18,12 @@ If you change [gr-shortcuts.example.ini](/config/gr-shortcuts.example.ini), keep
 
 ## Manual Release Check
 
+To create a zip:
+
+```powershell
+git archive --format=zip --output dist/gr-shortcuts-v0.X.0.zip HEAD
+```
+
 Before publishing a release:
 
 1. Run setup from a release zip.
